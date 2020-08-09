@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>SMS Spam Prediction</title>
+        <meta name="author" content="Clayton Hadaway" />
+        <meta
+            name="description"
+            content="Text message spam detection application"
+        />
+        <meta name="keywords" content="sms, text, message, spam, spammers" />
+
+        <link
+            rel="stylesheet"
+            href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+        />
+        <link
+            href="https://unpkg.com/tailwindcss/dist/tailwind.min.css"
+            rel="stylesheet"
+        />
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"
+            crossorigin="anonymous"
+        ></script>
+    </head>
+
+    <body class="bg-gray-900 font-sans leading-normal tracking-normal mt-12">
+        <!--Nav-->
+        <nav
+            class="bg-gray-900 pt-2 md:pt-1 pb-1 px-1 mt-0 h-auto fixed w-full z-20 top-0"
+        >
+            <div class="flex flex-wrap items-center">
+                <div
+                    class="flex flex-shrink md:w-1/3 justify-center md:justify-start text-white"
+                ></div>
+
+                <div
+                    class="flex flex-1 md:w-1/3 justify-center md:justify-start text-white px-2"
+                ></div>
+
+                <div
+                    class="flex w-full pt-2 content-center justify-between md:w-1/3 md:justify-end"
+                >
+                    <ul
+                        class="list-reset flex justify-between flex-1 md:flex-none items-center"
+                    >
+                        <li class="flex-1 md:flex-none md:mr-3">
+                            <a
+                                class="inline-block text-gray-600 no-underline hover:text-gray-200 hover:text-underline py-2 px-4"
+                                href="/"
+                                >Spam Predictor</a
+                            >
+                        </li>
+                        <li class="flex-1 md:flex-none md:mr-3">
+                            <a
+                                class="inline-block py-2 px-4 text-white no-underline"
+                                href="/dashboard"
+                                >Dashboard</a
+                            >
+                        </li>
+                        <li class="flex-1 md:flex-none md:mr-3">
+                            <div class="relative inline-block">
+                                <button
+                                    onclick="toggleDD('myDropdown')"
+                                    class="drop-button text-white focus:outline-none"
+                                >
+                                    <span class="pr-2"
+                                        ><i class="em em-robot_face"></i
+                                    ></span>
+                                    Hi, Admin<svg
+                                        class="h-3 fill-current inline"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path
+                                            d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
+                                        />
+                                    </svg>
+                                </button>
+                                <div
+                                    id="myDropdown"
+                                    class="dropdownlist absolute bg-gray-900 text-white right-0 mt-3 p-3 overflow-auto z-30 invisible"
+                                >
+                                    <a
+                                        href="#"
+                                        class="p-2 hover:bg-gray-800 text-white text-sm no-underline hover:no-underline block"
+                                        ><i
+                                            class="fas fa-sign-out-alt fa-fw"
+                                        ></i>
+                                        Log Out</a
+                                    >
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="flex flex-col md:flex-row">
+            <div
+                class="main-content flex-1 bg-gray-100 mt-12 md:mt-2 pb-24 md:pb-5"
+            >
+                <div class="flex flex-row flex-wrap flex-grow mt-2">
+                    <div class="w-full md:w-1/2 xl:w-1/3 p-3">
+                        <!--Graph Card-->
+                        <div
+                            class="bg-white border-transparent rounded-lg shadow-lg"
+                        >
+                            <div
+                                class="bg-gray-400 uppercase text-gray-800 border-b-2 border-gray-500 rounded-tl-lg rounded-tr-lg p-2"
+                            >
+                                <h5 class="font-bold uppercase text-gray-600">
+                                    Length of Ham Messages
+                                </h5>
+                            </div>
+                            <div class="p-5">
+                                <canvas
+                                    id="chartjs-69"
+                                    class="chartjs"
+                                    width="undefined"
+                                    height="undefined"
+                                ></canvas>
+                                <script>
+                                    function makeHamChart(messages) {
+                                        const frequencies = {};
+                                        const frequencyData = messages
+                                            .filter((m) => m.label === 'ham')
+                                            .map((d) => {
+                                                const freqRef = frequencies;
+                                                const occurance = d.message_len;
+
+                                                !!frequencies[occurance]
+                                                    ? (frequencies[
+                                                          occurance
+                                                      ] += 1)
+                                                    : (frequencies[
+                                                          occurance
+                                                      ] = 1);
+                                            });
+
+                                        var chart = new Chart('chartjs-69', {
+                                            type: 'bar',
+                                            data: {
+                                                labels: Object.keys(
+                                                    frequencies
+                                                ),
+                                                datasets: [
+                                                    {
+                                                        label: 'Message Length',
+                                                        backgroundColor:
+                                                            '#2ab7ca',
+                                                        data: Object.values(
+                                                            frequencies
+                                                        ),
+                                                    },
+                                                ],
+                                            },
+                                            options: {
+                                                scales: {
+                                                    xAxes: [
+                                                        {
+                                                            ticks: {
+                                                                autoSkip: true,
+                                                                maxTicksLimit: 20,
+                                                            },
+                                                        },
+                                                    ],
+                                                },
+                                            },
+                                        });
+                                    }
+
+                                    d3.csv('./static/sms.csv').then(
+                                        makeHamChart
+                                    );
+                                </script>
+                            </div>
+                        </div>
+                        <!--/Graph Card-->
+                    </div>
+
+                    <div class="w-full md:w-1/2 xl:w-1/3 p-3">
+                        <!--Graph Card-->
+                        <div
+                            class="bg-white border-transparent rounded-lg shadow-lg"
+                        >
+                            <div
+                                class="bg-gray-400 border-b-2 border-gray-500 rounded-tl-lg rounded-tr-lg p-2"
+                            >
+                                <h5 class="font-bold uppercase text-gray-600">
+                                    Length of Spam Mesasges
+                                </h5>
+                            </div>
+                            <div class="p-5">
+                                <canvas
+                                    id="chartjs-0"
+                                    class="chartjs"
+                                    width="undefined"
+                                    height="undefined"
+                                ></canvas>
+                                <script>
+                                    function makeSpamChart(messages) {
+                                        const frequencies = {};
+                                        const frequencyData = messages
+                                            .filter((m) => m.label === 'spam')
+                                            .map((d) => {
+                                                const freqRef = frequencies;
+                                                const occurance = d.message_len;
+
+                                                !!frequencies[occurance]
+                                                    ? (frequencies[
+                                                          occurance
+                                                      ] += 1)
+                                                    : (frequencies[
+                                                          occurance
+                                                      ] = 1);
+                                            });
+
+                                        var chart = new Chart('chartjs-0', {
+                                            type: 'bar',
+                                            data: {
+                                                labels: Object.keys(
+                                                    frequencies
+                                                ),
+                                                datasets: [
+                                                    {
+                                                        label: 'Message Length',
+                                                        backgroundColor:
+                                                            '#fe4a49',
+                                                        data: Object.values(
+                                                            frequencies
+                                                        ),
+                                                    },
+                                                ],
+                                            },
+                                            options: {
+                                                scales: {
+                                                    xAxes: [
+                                                        {
+                                                            ticks: {
+                                                                autoSkip: true,
+                                                                maxTicksLimit: 20,
+                                                            },
+                                                        },
+                                                    ],
+                                                },
+                                            },
+                                        });
+                                    }
+
+                                    d3.csv('./static/sms.csv').then(
+                                        makeSpamChart
+                                    );
+                                </script>
+                            </div>
+                        </div>
+                        <!--/Graph Card-->
+                    </div>
+
+                    <div class="w-full md:w-1/2 xl:w-1/3 p-3">
+                        <!--Graph Card-->
+                        <div
+                            class="bg-white border-transparent rounded-lg shadow-lg"
+                        >
+                            <div
+                                class="bg-gray-400 border-b-2 border-gray-500 rounded-tl-lg rounded-tr-lg p-2"
+                            >
+                                <h5 class="font-bold uppercase text-gray-600">
+                                    Top Ham Words
+                                </h5>
+                            </div>
+                            <div class="p-5">
+                                <canvas
+                                    id="chartjs-39"
+                                    class="chartjs"
+                                    width="undefined"
+                                    height="undefined"
+                                ></canvas>
+                                <script>
+                                    function makeHamWordChart(messages) {
+                                        // get frequency of spam words
+                                        const frequencies = {};
+                                        const frequencyData = messages
+                                            .filter((m) => m.label === 'ham')
+                                            .map((d) => {
+                                                const message_words = d.clean_msg.split(
+                                                    ' '
+                                                );
+                                                message_words.map((word) => {
+                                                    !!frequencies[
+                                                        word.toLowerCase()
+                                                    ]
+                                                        ? (frequencies[
+                                                              word
+                                                          ] += 1)
+                                                        : (frequencies[
+                                                              word
+                                                          ] = 1);
+                                                });
+                                            });
+
+                                        function getKeysWithHighestValues(
+                                            o,
+                                            n
+                                        ) {
+                                            var keys = Object.keys(o);
+                                            keys.sort(function (a, b) {
+                                                return o[b] - o[a];
+                                            });
+                                            return keys.slice(0, n);
+                                        }
+
+                                        const highestValues = getKeysWithHighestValues(
+                                            frequencies,
+                                            10
+                                        );
+                                        var chart = new Chart('chartjs-39', {
+                                            type: 'horizontalBar',
+                                            data: {
+                                                labels: highestValues,
+                                                datasets: [
+                                                    {
+                                                        label: 'Message Length',
+                                                        backgroundColor:
+                                                            '#2ab7ca',
+                                                        data: highestValues.map(
+                                                            (v) =>
+                                                                frequencies[v]
+                                                        ),
+                                                    },
+                                                ],
+                                            },
+                                            options: {
+                                                scales: {},
+                                            },
+                                        });
+                                    }
+
+                                    d3.csv('./static/sms.csv').then(
+                                        makeHamWordChart
+                                    );
+                                </script>
+                            </div>
+                        </div>
+                        <!--/Graph Card-->
+                    </div>
+
+                    <div class="w-full md:w-1/2 xl:w-1/3 p-3">
+                        <!--Graph Card-->
+                        <div
+                            class="bg-white border-transparent rounded-lg shadow-lg"
+                        >
+                            <div
+                                class="bg-gray-400 border-b-2 border-gray-500 rounded-tl-lg rounded-tr-lg p-2"
+                            >
+                                <h5 class="font-bold uppercase text-gray-600">
+                                    Top Spam Words
+                                </h5>
+                            </div>
+                            <div class="p-5">
+                                <canvas
+                                    id="chartjs-1"
+                                    class="chartjs"
+                                    width="undefined"
+                                    height="undefined"
+                                ></canvas>
+                                <script>
+                                    function makeSpamWordChart(messages) {
+                                        // get frequency of spam words
+                                        const frequencies = {};
+                                        const frequencyData = messages
+                                            .filter((m) => m.label === 'spam')
+                                            .map((d) => {
+                                                const message_words = d.clean_msg.split(
+                                                    ' '
+                                                );
+                                                message_words.map((word) => {
+                                                    !!frequencies[
+                                                        word.toLowerCase()
+                                                    ]
+                                                        ? (frequencies[
+                                                              word
+                                                          ] += 1)
+                                                        : (frequencies[
+                                                              word
+                                                          ] = 1);
+                                                });
+                                            });
+
+                                        function getKeysWithHighestValues(
+                                            o,
+                                            n
+                                        ) {
+                                            var keys = Object.keys(o);
+                                            keys.sort(function (a, b) {
+                                                return o[b] - o[a];
+                                            });
+                                            return keys.slice(0, n);
+                                        }
+
+                                        const highestValues = getKeysWithHighestValues(
+                                            frequencies,
+                                            10
+                                        );
+                                        var chart = new Chart('chartjs-1', {
+                                            type: 'horizontalBar',
+                                            data: {
+                                                labels: highestValues,
+                                                datasets: [
+                                                    {
+                                                        label: 'Message Length',
+                                                        backgroundColor:
+                                                            '#fe4a49',
+                                                        data: highestValues.map(
+                                                            (v) =>
+                                                                frequencies[v]
+                                                        ),
+                                                    },
+                                                ],
+                                            },
+                                            options: {
+                                                scales: {},
+                                            },
+                                        });
+                                    }
+
+                                    d3.csv('./static/sms.csv').then(
+                                        makeSpamWordChart
+                                    );
+                                </script>
+                            </div>
+                        </div>
+                        <!--/Graph Card-->
+                    </div>
+
+                    <div class="w-full md:w-1/2 xl:w-1/3 p-3">
+                        <!--Graph Card-->
+                        <div
+                            class="bg-white border-transparent rounded-lg shadow-lg"
+                        >
+                            <div
+                                class="bg-gray-400 border-b-2 border-gray-500 rounded-tl-lg rounded-tr-lg p-2"
+                            >
+                                <h5 class="font-bold uppercase text-gray-600">
+                                    Ham vs Spam Input Dataset
+                                </h5>
+                            </div>
+                            <div class="p-5">
+                                <canvas
+                                    id="circleChart"
+                                    class="chartjs"
+                                    width="undefined"
+                                    height="undefined"
+                                    aspectRatio="4"
+                                ></canvas>
+                                <script>
+                                    function makeCircleChart(messages) {
+                                        const hamLength = messages.filter(
+                                            (m) => m.label === 'ham'
+                                        ).length;
+                                        const spamLength = messages.filter(
+                                            (m) => m.label === 'spam'
+                                        ).length;
+
+                                        var chart = new Chart('circleChart', {
+                                            type: 'doughnut',
+                                            data: {
+                                                labels: ['Ham', 'Spam'],
+                                                datasets: [
+                                                    {
+                                                        data: [
+                                                            hamLength,
+                                                            spamLength,
+                                                        ],
+                                                        backgroundColor: [
+                                                            '#2ab7ca',
+                                                            '#fe4a49',
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        });
+                                    }
+
+                                    d3.csv('./static/sms.csv').then(
+                                        makeCircleChart
+                                    );
+                                </script>
+                            </div>
+                        </div>
+                        <!--/Graph Card-->
+                    </div>
+
+                    <div class="w-full p-3">
+                        <!--Table Card-->
+                        <div
+                            class="bg-white border-transparent rounded-lg shadow-lg"
+                        >
+                            <div
+                                class="bg-gray-400 border-b-2 border-gray-500 rounded-tl-lg rounded-tr-lg p-2"
+                            >
+                                <h5 class="font-bold uppercase text-gray-600">
+                                    Input Data
+                                </h5>
+                            </div>
+                            <div class="p-5">
+                                <table class="w-full p-5 text-gray-700">
+                                    <thead>
+                                        <tr>
+                                            <th title="Label">Label</th>
+                                            <th title="Message">Message</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>ham</td>
+                                            <td>
+                                                Go until jurong point, crazy..
+                                                Available only in bugis n great
+                                                world la e buffet... Cine there
+                                                got amore wat...
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ham</td>
+                                            <td>
+                                                Ok lar... Joking wif u oni...
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>spam</td>
+                                            <td>
+                                                Free entry in 2 a wkly comp to
+                                                win FA Cup final tkts 21st May
+                                                2005. Text FA to 87121 to
+                                                receive entry question(std txt
+                                                rate)T&amp;C&#39;s apply
+                                                08452810075over18&#39;s
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ham</td>
+                                            <td>
+                                                U dun say so early hor... U c
+                                                already then say...
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ham</td>
+                                            <td>
+                                                Nah I don&#39;t think he goes to
+                                                usf, he lives around here though
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>spam</td>
+                                            <td>
+                                                FreeMsg Hey there darling
+                                                it&#39;s been 3 week&#39;s now
+                                                and no word back! I&#39;d like
+                                                some fun you up for it still? Tb
+                                                ok! XxX std chgs to send, �1.50
+                                                to rcv
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ham</td>
+                                            <td>
+                                                Even my brother is not like to
+                                                speak with me. They treat me
+                                                like aids patent.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ham</td>
+                                            <td>
+                                                As per your request &#39;Melle
+                                                Melle (Oru Minnaminunginte
+                                                Nurungu Vettam)&#39; has been
+                                                set as your callertune for all
+                                                Callers. Press *9 to copy your
+                                                friends Callertune
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>spam</td>
+                                            <td>
+                                                WINNER!! As a valued network
+                                                customer you have been selected
+                                                to receivea �900 prize reward!
+                                                To claim call 09061701461. Claim
+                                                code KL341. Valid 12 hours only.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>spam</td>
+                                            <td>
+                                                Had your mobile 11 months or
+                                                more? U R entitled to Update to
+                                                the latest colour mobiles with
+                                                camera for Free! Call The Mobile
+                                                Update Co FREE on 08002986030
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ham</td>
+                                            <td>
+                                                I&#39;m gonna be home soon and i
+                                                don&#39;t want to talk about
+                                                this stuff anymore tonight, k?
+                                                I&#39;ve cried enough today.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>spam</td>
+                                            <td>
+                                                SIX chances to win CASH! From
+                                                100 to 20,000 pounds txt&gt;
+                                                CSH11 and send to 87575. Cost
+                                                150p/day, 6days, 16+ TsandCs
+                                                apply Reply HL 4 info
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>spam</td>
+                                            <td>
+                                                URGENT! You have won a 1 week
+                                                FREE membership in our �100,000
+                                                Prize Jackpot! Txt the word:
+                                                CLAIM to No: 81010 T&amp;C
+                                                www.dbuk.net LCCLTD POBOX
+                                                4403LDNW1A7RW18
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ham</td>
+                                            <td>
+                                                I&#39;ve been searching for the
+                                                right words to thank you for
+                                                this breather. I promise i wont
+                                                take your help for granted and
+                                                will fulfil my promise. You have
+                                                been wonderful and a blessing at
+                                                all times.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ham</td>
+                                            <td>
+                                                I HAVE A DATE ON SUNDAY WITH
+                                                WILL!!
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <p class="py-2">
+                                    <a href="#">See More Data...</a>
+                                </p>
+                            </div>
+                        </div>
+                        <!--/table Card-->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            /*Toggle dropdown list*/
+            function toggleDD(myDropMenu) {
+                document
+                    .getElementById(myDropMenu)
+                    .classList.toggle('invisible');
+            }
+            /*Filter dropdown options*/
+            function filterDD(myDropMenu, myDropMenuSearch) {
+                var input, filter, ul, li, a, i;
+                input = document.getElementById(myDropMenuSearch);
+                filter = input.value.toUpperCase();
+                div = document.getElementById(myDropMenu);
+                a = div.getElementsByTagName('a');
+                for (i = 0; i < a.length; i++) {
+                    if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+                        a[i].style.display = '';
+                    } else {
+                        a[i].style.display = 'none';
+                    }
+                }
+            }
+            // Close the dropdown menu if the user clicks outside of it
+            window.onclick = function (event) {
+                if (
+                    !event.target.matches('.drop-button') &&
+                    !event.target.matches('.drop-search')
+                ) {
+                    var dropdowns = document.getElementsByClassName(
+                        'dropdownlist'
+                    );
+                    for (var i = 0; i < dropdowns.length; i++) {
+                        var openDropdown = dropdowns[i];
+                        if (!openDropdown.classList.contains('invisible')) {
+                            openDropdown.classList.add('invisible');
+                        }
+                    }
+                }
+            };
+        </script>
+    </body>
+</html>
